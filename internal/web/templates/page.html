@@ -45,14 +45,18 @@
     .inspector .method { color:var(--req); }
     .inspector .status { color:var(--res); }
     .error { background:#2a1b1b; border:1px solid var(--err); color:var(--err); border-radius:8px; padding:8px 10px; }
+    .spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--line); border-top-color:var(--accent); border-radius:50%; vertical-align:middle; margin-left:8px; animation:spin .6s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .htmx-indicator { opacity:0; transition:opacity 150ms; }
+    .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity:1; }
   </style>
 </head>
 <body>
   <header>
-    <h1>http-anatomy</h1>
+    <h1>HTMX解剖室<span id="global-spinner" class="spinner htmx-indicator" aria-hidden="true"></span></h1>
     <p>Webの裏側を解剖する。HTMLだけで画面の複数箇所を完全同期するHATEOAS体感教材。</p>
   </header>
-  <div class="panes">
+  <div class="panes" hx-indicator="#global-spinner">
     <section class="pane left">
       <div class="tabs">
         <button hx-get="/fragments/todos" hx-target="#resource-pane" hx-swap="outerHTML">Todos</button>

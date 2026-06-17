@@ -15,5 +15,5 @@
     <input class="edit" name="name" value="{{.Name}}" maxlength="200">
     <input class="edit" name="email" value="{{.Email}}" maxlength="200">
   </form>
-  <button title="削除" hx-delete="/api/users/{{.ID}}" hx-target="#user-{{.ID}}" hx-swap="outerHTML">削除</button>
+  <button title="削除" hx-delete="/api/users/{{.ID}}" hx-target="#user-{{.ID}}" hx-swap="outerHTML" hx-confirm="このユーザーを削除しますか？">削除</button>
 </li>{{end}}

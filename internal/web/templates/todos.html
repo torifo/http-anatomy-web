@@ -14,5 +14,5 @@
   <form hx-patch="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML" style="flex:1; display:flex; gap:8px;">
     <input class="edit" name="title" value="{{.Title}}" maxlength="200">
   </form>
-  <button title="削除" hx-delete="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML">削除</button>
+  <button title="削除" hx-delete="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML" hx-confirm="このタスクを削除しますか？">削除</button>
 </li>{{end}}
