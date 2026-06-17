@@ -108,6 +108,33 @@ func TestToggleVsEditTodo(t *testing.T) {
 	}
 }
 
+func TestThemeToggle(t *testing.T) {
+	h := newTestServer()
+	if w := do(t, h, "GET", "/", "", nil); !strings.Contains(w.Body.String(), "theme-dark") {
+		t.Fatal("default theme should be dark")
+	}
+	w := do(t, h, "GET", "/theme/toggle", "", nil)
+	if w.Header().Get("HX-Redirect") != "/" {
+		t.Fatalf("toggle should set HX-Redirect: %q", w.Header().Get("HX-Redirect"))
+	}
+	var theme string
+	for _, c := range w.Result().Cookies() {
+		if c.Name == "ha_theme" {
+			theme = c.Value
+		}
+	}
+	if theme != "light" {
+		t.Fatalf("toggle should set ha_theme=light, got %q", theme)
+	}
+	r := httptest.NewRequest("GET", "/", nil)
+	r.Header.Set("Cookie", "ha_theme=light")
+	rw := httptest.NewRecorder()
+	h.ServeHTTP(rw, r)
+	if !strings.Contains(rw.Body.String(), "theme-light") {
+		t.Fatal("light cookie should render theme-light")
+	}
+}
+
 func TestCreateTodoSetsToastTrigger(t *testing.T) {
 	h := newTestServer()
 	w := do(t, h, "POST", "/api/todos", "s", url.Values{"title": {"task"}})

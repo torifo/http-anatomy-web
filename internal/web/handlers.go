@@ -38,6 +38,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	sid := sessionID(w, r)
 	view := PageView{
+		Theme:     themeFrom(r),
 		Todos:     buildTodosView(s.store.Todos(sid), "", "all"),
 		Inspector: InspectorView{OOB: false, History: s.store.History(sid)},
 	}

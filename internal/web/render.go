@@ -33,6 +33,7 @@ type TodosView struct {
 
 // PageView feeds the full two-pane page on GET /.
 type PageView struct {
+	Theme     string // "dark" | "light"
 	Todos     TodosView
 	Inspector InspectorView
 }

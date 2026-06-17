@@ -18,6 +18,7 @@ func NewServer(s *store.Store) http.Handler {
 	srv := &Server{store: s}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /", srv.handleIndex)
+	mux.HandleFunc("GET /theme/toggle", srv.handleThemeToggle)
 	mux.HandleFunc("GET /fragments/todos", srv.handleTodosFragment)
 	mux.HandleFunc("GET /fragments/users", srv.handleUsersFragment)
 	mux.HandleFunc("POST /api/todos", srv.handleCreateTodo)
