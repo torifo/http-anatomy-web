@@ -21,6 +21,7 @@ func NewServer(s *store.Store) http.Handler {
 	mux.HandleFunc("GET /fragments/todos", srv.handleTodosFragment)
 	mux.HandleFunc("GET /fragments/users", srv.handleUsersFragment)
 	mux.HandleFunc("POST /api/todos", srv.handleCreateTodo)
+	mux.HandleFunc("PUT /api/todos/{id}", srv.handlePutTodo)
 	mux.HandleFunc("PATCH /api/todos/{id}", srv.handlePatchTodo)
 	mux.HandleFunc("DELETE /api/todos/{id}", srv.handleDeleteTodo)
 	mux.HandleFunc("POST /api/users", srv.handleCreateUser)

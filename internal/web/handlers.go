@@ -102,12 +102,45 @@ func (s *Server) handleCreateTodo(w http.ResponseWriter, r *http.Request) {
 		s.respondError(w, r, sid, http.StatusUnprocessableEntity, "title is required")
 		return
 	}
-	primary, err := renderToString("todo-item", s.store.AddTodo(sid, title))
+	t, ok := s.store.AddTodoUnique(sid, title)
+	if !ok {
+		s.respondError(w, r, sid, http.StatusConflict, "a todo with that title already exists")
+		return
+	}
+	primary, err := renderToString("todo-item", t)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	s.writeWithInspector(w, r, sid, primary, http.StatusCreated)
+}
+
+// handlePutTodo fully replaces a todo (PUT, idempotent): both title and done
+// come from the form. Contrast with PATCH, which updates a single field.
+func (s *Server) handlePutTodo(w http.ResponseWriter, r *http.Request) {
+	sid := sessionID(w, r)
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		s.respondError(w, r, sid, http.StatusNotFound, "invalid todo id")
+		return
+	}
+	title := clip(r.FormValue("title"))
+	if title == "" {
+		s.respondError(w, r, sid, http.StatusUnprocessableEntity, "title is required")
+		return
+	}
+	done := r.FormValue("done") == "true" || r.FormValue("done") == "on"
+	t, found := s.store.ReplaceTodo(sid, id, title, done)
+	if !found {
+		s.respondError(w, r, sid, http.StatusNotFound, "todo not found")
+		return
+	}
+	primary, err := renderToString("todo-item", t)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	s.writeWithInspector(w, r, sid, primary, http.StatusOK)
 }
 
 func (s *Server) handlePatchTodo(w http.ResponseWriter, r *http.Request) {

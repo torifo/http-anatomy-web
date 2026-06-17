@@ -108,6 +108,38 @@ func TestToggleVsEditTodo(t *testing.T) {
 	}
 }
 
+func TestDuplicateTodoReturns409(t *testing.T) {
+	h := newTestServer()
+	do(t, h, "POST", "/api/todos", "s", url.Values{"title": {"task"}})
+	w := do(t, h, "POST", "/api/todos", "s", url.Values{"title": {"TASK"}})
+	if w.Code != 409 {
+		t.Fatalf("want 409 got %d", w.Code)
+	}
+	if !strings.Contains(w.Body.String(), "already exists") {
+		t.Fatal("missing conflict message")
+	}
+}
+
+func TestPutTodoFullReplace(t *testing.T) {
+	h := newTestServer()
+	do(t, h, "POST", "/api/todos", "s", url.Values{"title": {"old"}})
+	w := do(t, h, "PUT", "/api/todos/1", "s", url.Values{"title": {"new"}, "done": {"true"}})
+	if w.Code != 200 {
+		t.Fatalf("want 200 got %d", w.Code)
+	}
+	body := w.Body.String()
+	if !strings.Contains(body, "new") || !strings.Contains(body, "done") {
+		t.Fatalf("PUT should replace title and set done: %s", body)
+	}
+	if !strings.Contains(body, "PUT /api/todos/1") {
+		t.Fatal("inspector should record the PUT")
+	}
+	w = do(t, h, "PUT", "/api/todos/999", "s", url.Values{"title": {"x"}})
+	if w.Code != 404 {
+		t.Fatalf("PUT missing id want 404 got %d", w.Code)
+	}
+}
+
 func TestDeleteTodoEmptyPrimary(t *testing.T) {
 	h := newTestServer()
 	do(t, h, "POST", "/api/todos", "s", url.Values{"title": {"task"}})
