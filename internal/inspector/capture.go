@@ -21,28 +21,46 @@ var shownHeaders = []string{
 // respContentType is the content type every fragment response uses.
 const respContentType = "text/html; charset=utf-8"
 
+// shownRespHeaders lists the response headers surfaced in the inspector, in
+// display order. These HTMX response headers drive client-side behavior
+// (events, redirects, swap overrides) and are a teaching highlight.
+var shownRespHeaders = []string{
+	"HX-Trigger",
+	"HX-Reswap",
+	"HX-Retarget",
+	"HX-Redirect",
+}
+
 // BuildExchange captures one request/response for the inspector. body is
 // the primary swap fragment only; the inspector's own OOB block must never
-// be passed in, so the inspector never renders itself.
-func BuildExchange(r *http.Request, body string, status int) model.Exchange {
-	var headers []model.Header
+// be passed in, so the inspector never renders itself. respHeaders is the
+// response header set already written by the handler.
+func BuildExchange(r *http.Request, body string, status int, respHeaders http.Header) model.Exchange {
+	var reqHeaders []model.Header
 	for _, name := range shownHeaders {
 		v := r.Header.Get(name)
 		if name == "Host" && v == "" {
 			v = r.Host // Host is not stored in r.Header.
 		}
 		if v != "" {
-			headers = append(headers, model.Header{Name: name, Value: v})
+			reqHeaders = append(reqHeaders, model.Header{Name: name, Value: v})
+		}
+	}
+	var resHeaders []model.Header
+	for _, name := range shownRespHeaders {
+		if v := respHeaders.Get(name); v != "" {
+			resHeaders = append(resHeaders, model.Header{Name: name, Value: v})
 		}
 	}
 	return model.Exchange{
-		Method:     r.Method,
-		Path:       r.URL.Path,
-		Proto:      r.Proto,
-		ReqHeaders: headers,
-		Status:     status,
-		StatusText: http.StatusText(status),
-		RespCType:  respContentType,
-		Body:       body,
+		Method:      r.Method,
+		Path:        r.URL.Path,
+		Proto:       r.Proto,
+		ReqHeaders:  reqHeaders,
+		Status:      status,
+		StatusText:  http.StatusText(status),
+		RespCType:   respContentType,
+		RespHeaders: resHeaders,
+		Body:        body,
 	}
 }

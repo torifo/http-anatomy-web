@@ -1,6 +1,7 @@
 package inspector
 
 import (
+	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
@@ -14,8 +15,13 @@ func TestBuildExchangeSelectsHeaders(t *testing.T) {
 	r.Header.Set("Authorization", "secret") // not in shownHeaders
 	r.Header.Set("Cookie", "ha_session=x")  // not in shownHeaders
 
-	ex := BuildExchange(r, "<li>fragment</li>", 200)
+	respHeaders := http.Header{}
+	respHeaders.Set("HX-Trigger", "showToast")
+	ex := BuildExchange(r, "<li>fragment</li>", 200, respHeaders)
 
+	if len(ex.RespHeaders) != 1 || ex.RespHeaders[0].Name != "HX-Trigger" || ex.RespHeaders[0].Value != "showToast" {
+		t.Fatalf("HX-Trigger response header not captured: %+v", ex.RespHeaders)
+	}
 	if ex.Method != "DELETE" || ex.Path != "/api/todos/42" {
 		t.Fatalf("method/path wrong: %s %s", ex.Method, ex.Path)
 	}
@@ -43,7 +49,7 @@ func TestBuildExchangeSelectsHeaders(t *testing.T) {
 func TestBuildExchangeBodyIsPrimaryOnly(t *testing.T) {
 	r := httptest.NewRequest("POST", "/api/todos", nil)
 	body := "<li id=\"todo-1\">buy milk</li>"
-	ex := BuildExchange(r, body, 201)
+	ex := BuildExchange(r, body, 201, http.Header{})
 	if ex.Body != body {
 		t.Fatalf("body should be the primary fragment verbatim, got %q", ex.Body)
 	}

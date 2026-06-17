@@ -9,7 +9,9 @@
     </div>
     <div class="res">
       <strong>&lt; {{.Proto}} {{.Status}} {{.StatusText}}</strong>
-      <pre>Content-Type: {{.RespCType}}</pre>
+      <pre>Content-Type: {{.RespCType}}
+{{range .RespHeaders}}{{.Name}}: {{.Value}}
+{{end}}</pre>
       <div class="body-label">返却された HTML 断片（主フラグメント）</div>
       <pre class="body">{{.Body}}</pre>
     </div>

@@ -48,7 +48,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 // two regions. The primary string is captured into the exchange first, so
 // the inspector never renders its own OOB block.
 func (s *Server) writeWithInspector(w http.ResponseWriter, r *http.Request, sid, primary string, status int) {
-	ex := inspector.BuildExchange(r, primary, status)
+	ex := inspector.BuildExchange(r, primary, status, w.Header())
 	s.store.AppendHistory(sid, ex)
 	insp, err := renderToString("inspector", InspectorView{
 		OOB:     true,
