@@ -12,6 +12,13 @@ import (
 // maxFieldLen caps stored field lengths to limit memory abuse.
 const maxFieldLen = 200
 
+// toast returns an HX-Trigger header value that fires a client-side
+// "showToast" event. kind is ASCII-only (created|replaced|deleted) so the
+// header stays spec-compliant; the client maps it to display text.
+func toast(kind string) string {
+	return `{"showToast":{"kind":"` + kind + `"}}`
+}
+
 // clip trims whitespace and enforces maxFieldLen.
 func clip(s string) string {
 	s = strings.TrimSpace(s)
@@ -113,6 +120,7 @@ func (s *Server) handleCreateTodo(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("HX-Trigger", toast("created"))
 	s.writeWithInspector(w, r, sid, primary, http.StatusCreated)
 }
 
@@ -141,6 +149,7 @@ func (s *Server) handlePutTodo(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("HX-Trigger", toast("replaced"))
 	s.writeWithInspector(w, r, sid, primary, http.StatusOK)
 }
 
@@ -194,6 +203,7 @@ func (s *Server) handleDeleteTodo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Empty primary fragment: the row's outerHTML is replaced with nothing.
+	w.Header().Set("HX-Trigger", toast("deleted"))
 	s.writeWithInspector(w, r, sid, "", http.StatusOK)
 }
 
@@ -210,6 +220,7 @@ func (s *Server) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("HX-Trigger", toast("created"))
 	s.writeWithInspector(w, r, sid, primary, http.StatusCreated)
 }
 
@@ -246,5 +257,6 @@ func (s *Server) handleDeleteUser(w http.ResponseWriter, r *http.Request) {
 		s.respondError(w, r, sid, http.StatusNotFound, "user not found")
 		return
 	}
+	w.Header().Set("HX-Trigger", toast("deleted"))
 	s.writeWithInspector(w, r, sid, "", http.StatusOK)
 }

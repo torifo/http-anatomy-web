@@ -56,6 +56,9 @@
     .filter:hover { border-color:var(--accent); }
     .filter.active { color:var(--accent); border-color:var(--accent); }
     .summary { color:var(--muted); font-size:12px; margin-bottom:8px; list-style:none; }
+    #toasts { position:fixed; right:16px; bottom:16px; display:flex; flex-direction:column; gap:8px; z-index:50; }
+    .toast { background:var(--panel); border:1px solid var(--accent); color:var(--fg); padding:10px 14px; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.4); animation:toast-in .2s ease-out; }
+    @keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
   </style>
 </head>
 <body>
@@ -75,5 +78,19 @@
       {{template "inspector" .Inspector}}
     </section>
   </div>
+  <div id="toasts" aria-live="polite"></div>
+  <script>
+    // サーバが返す `HX-Trigger: {"showToast":{"kind":"..."}}` で発火するイベント。
+    // クライアントの状態管理ではなく、レスポンスヘッダ駆動の通知デモ。
+    var TOAST_TEXT = { created: "作成しました", replaced: "全置換しました (PUT)", deleted: "削除しました" };
+    document.body.addEventListener("showToast", function (e) {
+      var kind = (e.detail && e.detail.kind) || "";
+      var el = document.createElement("div");
+      el.className = "toast";
+      el.textContent = TOAST_TEXT[kind] || "OK";
+      document.getElementById("toasts").appendChild(el);
+      setTimeout(function () { el.remove(); }, 2600);
+    });
+  </script>
 </body>
 </html>{{end}}

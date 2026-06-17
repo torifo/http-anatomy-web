@@ -108,6 +108,19 @@ func TestToggleVsEditTodo(t *testing.T) {
 	}
 }
 
+func TestCreateTodoSetsToastTrigger(t *testing.T) {
+	h := newTestServer()
+	w := do(t, h, "POST", "/api/todos", "s", url.Values{"title": {"task"}})
+	trig := w.Header().Get("HX-Trigger")
+	if !strings.Contains(trig, "showToast") || !strings.Contains(trig, "created") {
+		t.Fatalf("HX-Trigger should fire showToast(created): %q", trig)
+	}
+	// The same header is surfaced in the inspector response-headers section.
+	if !strings.Contains(w.Body.String(), "HX-Trigger") {
+		t.Fatal("inspector should display the HX-Trigger response header")
+	}
+}
+
 func TestDuplicateTodoReturns409(t *testing.T) {
 	h := newTestServer()
 	do(t, h, "POST", "/api/todos", "s", url.Values{"title": {"task"}})
