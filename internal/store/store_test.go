@@ -45,6 +45,36 @@ func TestDeleteTodo(t *testing.T) {
 	}
 }
 
+func TestAddTodoUniqueRejectsDuplicate(t *testing.T) {
+	s := New()
+	if _, ok := s.AddTodoUnique("s", "task"); !ok {
+		t.Fatal("first add should succeed")
+	}
+	if _, ok := s.AddTodoUnique("s", "TASK"); ok {
+		t.Fatal("case-insensitive duplicate should be rejected")
+	}
+	if len(s.Todos("s")) != 1 {
+		t.Fatalf("want 1 todo, got %d", len(s.Todos("s")))
+	}
+}
+
+func TestReplaceTodo(t *testing.T) {
+	s := New()
+	tdo := s.AddTodo("s", "old")
+	got, ok := s.ReplaceTodo("s", tdo.ID, "new", true)
+	if !ok || got.Title != "new" || !got.Done {
+		t.Fatalf("replace failed: %+v ok=%v", got, ok)
+	}
+	// Idempotent: replacing again with the same values yields the same state.
+	again, _ := s.ReplaceTodo("s", tdo.ID, "new", true)
+	if again != got {
+		t.Fatalf("replace should be idempotent: %+v vs %+v", again, got)
+	}
+	if _, ok := s.ReplaceTodo("s", 999, "x", false); ok {
+		t.Fatal("replace on missing id should fail")
+	}
+}
+
 func TestSessionIsolation(t *testing.T) {
 	s := New()
 	s.AddTodo("alice", "a-task")

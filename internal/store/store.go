@@ -3,6 +3,7 @@
 package store
 
 import (
+	"strings"
 	"sync"
 
 	"http-anatomy/internal/model"
@@ -92,6 +93,38 @@ func (s *Store) UpdateTodo(id string, todoID int, title string) (model.Todo, boo
 	for i := range sess.Todos {
 		if sess.Todos[i].ID == todoID {
 			sess.Todos[i].Title = title
+			return sess.Todos[i], true
+		}
+	}
+	return model.Todo{}, false
+}
+
+// AddTodoUnique appends a todo unless a todo with the same title already
+// exists in the session (case-insensitive). ok is false on conflict.
+func (s *Store) AddTodoUnique(id, title string) (model.Todo, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	sess := s.ensure(id)
+	for _, t := range sess.Todos {
+		if strings.EqualFold(t.Title, title) {
+			return model.Todo{}, false
+		}
+	}
+	sess.todoSeq++
+	t := model.Todo{ID: sess.todoSeq, Title: title}
+	sess.Todos = append(sess.Todos, t)
+	return t, true
+}
+
+// ReplaceTodo fully replaces a todo's fields (PUT semantics, idempotent).
+func (s *Store) ReplaceTodo(id string, todoID int, title string, done bool) (model.Todo, bool) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	sess := s.ensure(id)
+	for i := range sess.Todos {
+		if sess.Todos[i].ID == todoID {
+			sess.Todos[i].Title = title
+			sess.Todos[i].Done = done
 			return sess.Todos[i], true
 		}
 	}
