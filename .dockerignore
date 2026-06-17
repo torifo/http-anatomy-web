@@ -5,3 +5,6 @@ README.md
 *_test.go
 /http-anatomy
 .DS_Store
+docker-compose*.yml
+.env
+.env.example

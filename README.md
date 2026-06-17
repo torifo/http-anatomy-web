@@ -5,7 +5,8 @@
   <img src="https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go">
   <img src="https://img.shields.io/badge/HTMX-3D72D7?style=for-the-badge&logo=htmx&logoColor=white" alt="HTMX">
   <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker">
-  <img src="https://img.shields.io/badge/Fly.io-8B5CF6?style=for-the-badge&logo=flydotio&logoColor=white" alt="Fly.io">
+  <img src="https://img.shields.io/badge/GHCR-181717?style=for-the-badge&logo=github&logoColor=white" alt="GHCR">
+  <img src="https://img.shields.io/badge/NGINX_Proxy-009639?style=for-the-badge&logo=nginx&logoColor=white" alt="NGINX Proxy">
   <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white" alt="GitHub Actions">
 </p>
 <!-- tech-stack:end -->
@@ -28,8 +29,8 @@
 - **言語 / ランタイム**: Go(標準ライブラリ中心 — `net/http`, `html/template`, `go:embed`)
 - **フロント**: HTMX(CDN)のみ。外部 JS フレームワーク・独自状態管理なし
 - **状態**: セッション別 in-memory ストア(`sync.Mutex` 保護)
-- **デプロイ**: 単一バイナリ / Docker(distroless)/ Fly.io 単一インスタンス
-- **CI**: GitHub Actions(`gofmt --check` / `go vet` / `go test`)
+- **デプロイ**: Docker(distroless)イメージを GHCR に発行 → 自前 VPS で pull
+- **CI**: GitHub Actions(`gofmt --check` / `go vet` / `go test`、および GHCR への build & push)
 
 ## 開発セットアップ
 
@@ -80,13 +81,23 @@ PORT=9000 go run .     # ポート変更
 - `internal/web/` … ルーティング・Cookie・CRUD ハンドラ・テンプレート(`go:embed`)
 - `.kiro/specs/http-anatomy/` … SDD spec(requirements / design / tasks)
 
-## デプロイ(Fly.io)
-```sh
-docker build -t http-anatomy .
-fly launch --copy-config --now    # 初回
-fly deploy                        # 以降
-```
-状態が揮発するため `auto_stop_machines = "off"` / `min_machines_running = 1` で常時 1 台を維持する。
+## デプロイ(GHCR + 自前 VPS)
+バックエンド(常駐 Go サーバ + サーバ側状態保持)のため **GitHub Pages では公開できない**。
+イメージを GHCR に発行し、VPS で pull して常駐させる。VPS 既存の共有リバースプロキシ
+(`nginxproxy/nginx-proxy` + `acme-companion`、外部ネット `global-proxy-network`)に
+`VIRTUAL_HOST` で吊るすだけで自動ルーティング・自動 TLS される。
+
+1. **イメージ発行(自動)**: `main` への push で GitHub Actions が
+   `ghcr.io/torifo/http-anatomy-web:latest`(と short-sha タグ)を build & push。
+2. **VPS 配置**: 設置先(例 `/home/ubuntu/Web/http-anatomy`)に `docker-compose.prod.yml` と
+   `.env`(`.env.example` 参照: `APP_HOST` / `IMAGE_TAG`)を置く。
+3. **デプロイ**:
+   ```sh
+   docker compose -f docker-compose.prod.yml --env-file .env pull
+   docker compose -f docker-compose.prod.yml --env-file .env up -d
+   ```
+
+DB なし・単一コンテナ。状態は in-memory(揮発)なので、コンテナ再起動でセッションは消える。
 
 ## 範囲外
 永続化(DB)/ 認証 / セッション失効(TTL)/ ユーザー間共有 / リアルタイム配信 / AI。

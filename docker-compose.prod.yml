@@ -1,0 +1,40 @@
+# HTMX解剖室 本番【VPS】向け compose。
+#
+# 方針: VPS ではビルドしない。イメージは GitHub Actions が GHCR に push 済みのものを
+# pull して使う。VPS の操作は pull && up -d のみ。
+#
+# 前提インフラ(VPS既存): 共有リバースプロキシ
+#   nginxproxy/nginx-proxy + acme-companion が常駐し、外部ネットワーク
+#   `global-proxy-network` 上のコンテナを VIRTUAL_HOST で自動ルーティング・自動TLS する。
+#   → 本アプリは個別 nginx 不要。VIRTUAL_HOST / LETSENCRYPT_HOST を設定して吊るすだけ。
+#
+# 状態は in-memory(揮発)・DB なし・単一コンテナ。再起動でセッションは消える。
+#
+# 設置先(VPS): /home/ubuntu/Web/http-anatomy
+# 使い方:
+#   1. VPS の設置先に .env を用意(.env.example 参照):
+#        APP_HOST=http-anatomy.example.com   # 公開ドメイン(VIRTUAL_HOST)
+#        IMAGE_TAG=latest                      # 任意。SHA 固定推奨も可
+#   2. デプロイ:
+#        docker compose -f docker-compose.prod.yml --env-file .env pull
+#        docker compose -f docker-compose.prod.yml --env-file .env up -d
+
+services:
+  app:
+    image: ghcr.io/torifo/http-anatomy-web:${IMAGE_TAG:-latest}
+    container_name: http_anatomy_app_prod
+    restart: unless-stopped
+    environment:
+      # 共有 nginx-proxy / acme-companion 連携(自動ルーティング・自動TLS)
+      VIRTUAL_HOST: ${APP_HOST}
+      VIRTUAL_PORT: "8080"
+      LETSENCRYPT_HOST: ${APP_HOST}
+      LETSENCRYPT_EMAIL: progbot.clover@gmail.com
+      # アプリ runtime
+      PORT: "8080"
+    networks:
+      - global-proxy-network
+
+networks:
+  global-proxy-network:
+    external: true
