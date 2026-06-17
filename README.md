@@ -1,4 +1,4 @@
-# http-anatomy(http-anatomy-web)
+# HTMX解剖室(http-anatomy-web)
 
 <!-- tech-stack:start (auto-generated) -->
 <p align="center">
