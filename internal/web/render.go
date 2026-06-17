@@ -21,9 +21,19 @@ type InspectorView struct {
 	History []model.Exchange
 }
 
+// TodosView feeds the todos pane: the (filtered) list plus the current
+// search/filter state and counts for the summary.
+type TodosView struct {
+	Todos  []model.Todo
+	Query  string
+	Filter string // "all" | "active" | "done"
+	Total  int    // all todos in the session (pre-filter)
+	Done   int    // completed todos in the session (pre-filter)
+}
+
 // PageView feeds the full two-pane page on GET /.
 type PageView struct {
-	Todos     []model.Todo
+	Todos     TodosView
 	Inspector InspectorView
 }
 

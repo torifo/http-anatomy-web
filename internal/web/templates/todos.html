@@ -4,8 +4,21 @@
     <input name="title" placeholder="新しいタスク" required maxlength="200">
     <button type="submit">＋ 追加</button>
   </form>
+  <div class="toolbar">
+    <input name="q" value="{{.Query}}" placeholder="検索 (keyup, 300ms)"
+      hx-get="/fragments/todos" hx-include="[name=filter]"
+      hx-target="#resource-pane" hx-swap="outerHTML"
+      hx-trigger="keyup changed delay:300ms, search">
+    <input type="hidden" name="filter" value="{{.Filter}}">
+    <span class="filters">
+      <button class="filter{{if eq .Filter "all"}} active{{end}}" hx-get="/fragments/todos?filter=all" hx-include="[name=q]" hx-target="#resource-pane" hx-swap="outerHTML">All</button>
+      <button class="filter{{if eq .Filter "active"}} active{{end}}" hx-get="/fragments/todos?filter=active" hx-include="[name=q]" hx-target="#resource-pane" hx-swap="outerHTML">Active</button>
+      <button class="filter{{if eq .Filter "done"}} active{{end}}" hx-get="/fragments/todos?filter=done" hx-include="[name=q]" hx-target="#resource-pane" hx-swap="outerHTML">Done</button>
+    </span>
+  </div>
+  <div class="summary">{{.Total}} 件中 {{.Done}} 完了{{if .Query}}・「{{.Query}}」で絞込{{end}}</div>
   <ul id="todo-list" class="list">
-    {{range .}}{{template "todo-item" .}}{{end}}
+    {{range .Todos}}{{template "todo-item" .}}{{else}}<li class="summary">該当なし</li>{{end}}
   </ul>
 </div>{{end}}
 

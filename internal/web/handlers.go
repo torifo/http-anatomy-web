@@ -31,7 +31,7 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 	}
 	sid := sessionID(w, r)
 	view := PageView{
-		Todos:     s.store.Todos(sid),
+		Todos:     buildTodosView(s.store.Todos(sid), "", "all"),
 		Inspector: InspectorView{OOB: false, History: s.store.History(sid)},
 	}
 	out, err := renderToString("page", view)
@@ -77,7 +77,8 @@ func (s *Server) respondError(w http.ResponseWriter, r *http.Request, sid string
 
 func (s *Server) handleTodosFragment(w http.ResponseWriter, r *http.Request) {
 	sid := sessionID(w, r)
-	primary, err := renderToString("todos", s.store.Todos(sid))
+	view := buildTodosView(s.store.Todos(sid), r.URL.Query().Get("q"), r.URL.Query().Get("filter"))
+	primary, err := renderToString("todos", view)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

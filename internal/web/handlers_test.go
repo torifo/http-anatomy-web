@@ -181,6 +181,30 @@ func TestSessionStatePersistsAcrossRequests(t *testing.T) {
 	}
 }
 
+func TestSearchAndFilterTodos(t *testing.T) {
+	h := newTestServer()
+	do(t, h, "POST", "/api/todos", "s", url.Values{"title": {"buy milk"}})
+	do(t, h, "POST", "/api/todos", "s", url.Values{"title": {"write code"}})
+	do(t, h, "PATCH", "/api/todos/1", "s", url.Values{}) // mark "buy milk" done
+
+	// Search narrows by title.
+	w := do(t, h, "GET", "/fragments/todos?q=milk", "s", nil)
+	body := w.Body.String()
+	if !strings.Contains(body, "buy milk") || strings.Contains(body, "write code") {
+		t.Fatalf("search q=milk should show only milk: %s", body)
+	}
+	// Summary counts are pre-filter (2 total, 1 done).
+	if !strings.Contains(body, "2 件中 1 完了") {
+		t.Fatalf("summary wrong: %s", body)
+	}
+	// filter=active hides the done one.
+	w = do(t, h, "GET", "/fragments/todos?filter=active", "s", nil)
+	body = w.Body.String()
+	if strings.Contains(body, "buy milk") || !strings.Contains(body, "write code") {
+		t.Fatalf("filter=active should hide done todo: %s", body)
+	}
+}
+
 func TestSessionIsolationAcrossCookies(t *testing.T) {
 	h := newTestServer()
 	do(t, h, "POST", "/api/todos", "alice", url.Values{"title": {"alice-task"}})

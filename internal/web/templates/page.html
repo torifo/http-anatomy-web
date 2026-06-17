@@ -49,6 +49,13 @@
     @keyframes spin { to { transform:rotate(360deg); } }
     .htmx-indicator { opacity:0; transition:opacity 150ms; }
     .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity:1; }
+    .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
+    .toolbar input[name=q] { flex:1; min-width:120px; }
+    .filters { display:flex; gap:4px; }
+    .filter { background:var(--panel); color:var(--muted); border:1px solid var(--line); padding:5px 10px; border-radius:6px; cursor:pointer; }
+    .filter:hover { border-color:var(--accent); }
+    .filter.active { color:var(--accent); border-color:var(--accent); }
+    .summary { color:var(--muted); font-size:12px; margin-bottom:8px; list-style:none; }
   </style>
 </head>
 <body>
