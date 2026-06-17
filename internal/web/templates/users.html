@@ -1,0 +1,19 @@
+{{define "users"}}<div id="resource-pane">
+  <h2>Users</h2>
+  <form class="add" hx-post="/api/users" hx-target="#user-list" hx-swap="beforeend" hx-on::after-request="this.reset()">
+    <input name="name" placeholder="名前" required maxlength="200">
+    <input name="email" placeholder="メール" maxlength="200">
+    <button type="submit">＋ 追加</button>
+  </form>
+  <ul id="user-list" class="list">
+    {{range .}}{{template "user-item" .}}{{end}}
+  </ul>
+</div>{{end}}
+
+{{define "user-item"}}<li id="user-{{.ID}}" class="row">
+  <form hx-patch="/api/users/{{.ID}}" hx-target="#user-{{.ID}}" hx-swap="outerHTML" style="flex:1; display:flex; gap:8px;">
+    <input class="edit" name="name" value="{{.Name}}" maxlength="200">
+    <input class="edit" name="email" value="{{.Email}}" maxlength="200">
+  </form>
+  <button title="削除" hx-delete="/api/users/{{.ID}}" hx-target="#user-{{.ID}}" hx-swap="outerHTML">削除</button>
+</li>{{end}}

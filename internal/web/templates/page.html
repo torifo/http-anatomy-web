@@ -1,0 +1,65 @@
+{{define "page"}}<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>http-anatomy — Webの裏側を解剖する</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+  <style>
+    :root { --bg:#0f1419; --panel:#171c24; --line:#2a323d; --fg:#d6dde6; --muted:#7d8b9a; --accent:#4fd1c5; --req:#f6ad55; --res:#68d391; --err:#fc8181; }
+    * { box-sizing:border-box; }
+    body { margin:0; font:14px/1.5 ui-sans-serif,system-ui,sans-serif; background:var(--bg); color:var(--fg); }
+    header { padding:14px 20px; border-bottom:1px solid var(--line); }
+    header h1 { margin:0; font-size:16px; }
+    header p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+    .panes { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); min-height:calc(100vh - 64px); }
+    .pane { background:var(--bg); padding:18px; overflow:auto; }
+    .pane h2 { margin:0 0 12px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+    .tabs { display:flex; gap:8px; margin-bottom:14px; }
+    .tabs button { background:var(--panel); color:var(--fg); border:1px solid var(--line); padding:6px 14px; border-radius:6px; cursor:pointer; }
+    .tabs button:hover { border-color:var(--accent); }
+    form.add { display:flex; gap:8px; margin-bottom:14px; }
+    input { background:var(--panel); border:1px solid var(--line); color:var(--fg); padding:7px 10px; border-radius:6px; }
+    input:focus { outline:none; border-color:var(--accent); }
+    button { font:inherit; }
+    .add button, .row button { background:var(--panel); color:var(--fg); border:1px solid var(--line); padding:6px 10px; border-radius:6px; cursor:pointer; }
+    .add button:hover, .row button:hover { border-color:var(--accent); }
+    ul.list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+    li.row { display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
+    li.row.done span.title { text-decoration:line-through; color:var(--muted); }
+    li.row .title { flex:1; }
+    li.row input.edit { flex:1; }
+    .inspector .exchange { border:1px solid var(--line); border-radius:8px; margin-bottom:16px; overflow:hidden; }
+    .inspector .req, .inspector .res { padding:10px 12px; }
+    .inspector .req { background:#1b1e1a; border-bottom:1px solid var(--line); }
+    .inspector .req strong { color:var(--req); }
+    .inspector .res strong { color:var(--res); }
+    .inspector pre { margin:6px 0 0; white-space:pre-wrap; word-break:break-word; font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--fg); }
+    .inspector .body-label { margin-top:10px; font-size:11px; color:var(--muted); }
+    .inspector pre.body { background:#0b0e12; border:1px solid var(--line); border-radius:6px; padding:8px; color:var(--accent); }
+    .inspector .empty { color:var(--muted); }
+    .inspector ol.history { margin:8px 0 0; padding-left:18px; color:var(--muted); font:12px/1.7 ui-monospace,monospace; }
+    .inspector .method { color:var(--req); }
+    .inspector .status { color:var(--res); }
+    .error { background:#2a1b1b; border:1px solid var(--err); color:var(--err); border-radius:8px; padding:8px 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>http-anatomy</h1>
+    <p>Webの裏側を解剖する。HTMLだけで画面の複数箇所を完全同期するHATEOAS体感教材。</p>
+  </header>
+  <div class="panes">
+    <section class="pane left">
+      <div class="tabs">
+        <button hx-get="/fragments/todos" hx-target="#resource-pane" hx-swap="outerHTML">Todos</button>
+        <button hx-get="/fragments/users" hx-target="#resource-pane" hx-swap="outerHTML">Users</button>
+      </div>
+      {{template "todos" .Todos}}
+    </section>
+    <section class="pane right inspector">
+      {{template "inspector" .Inspector}}
+    </section>
+  </div>
+</body>
+</html>{{end}}

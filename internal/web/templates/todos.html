@@ -1,0 +1,18 @@
+{{define "todos"}}<div id="resource-pane">
+  <h2>Todos</h2>
+  <form class="add" hx-post="/api/todos" hx-target="#todo-list" hx-swap="beforeend" hx-on::after-request="this.reset()">
+    <input name="title" placeholder="新しいタスク" required maxlength="200">
+    <button type="submit">＋ 追加</button>
+  </form>
+  <ul id="todo-list" class="list">
+    {{range .}}{{template "todo-item" .}}{{end}}
+  </ul>
+</div>{{end}}
+
+{{define "todo-item"}}<li id="todo-{{.ID}}" class="row{{if .Done}} done{{end}}">
+  <button title="完了トグル" hx-patch="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML">{{if .Done}}↩{{else}}✓{{end}}</button>
+  <form hx-patch="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML" style="flex:1; display:flex; gap:8px;">
+    <input class="edit" name="title" value="{{.Title}}" maxlength="200">
+  </form>
+  <button title="削除" hx-delete="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML">削除</button>
+</li>{{end}}

@@ -1,0 +1,25 @@
+{{define "inspector"}}<div id="http-inspector"{{if .OOB}} hx-swap-oob="true"{{end}}>
+  <h2>HTTP インスペクター</h2>
+  {{with .Current}}
+  <div class="exchange">
+    <div class="req">
+      <strong>&gt; {{.Method}} {{.Path}} {{.Proto}}</strong>
+      <pre>{{range .ReqHeaders}}{{.Name}}: {{.Value}}
+{{end}}</pre>
+    </div>
+    <div class="res">
+      <strong>&lt; {{.Proto}} {{.Status}} {{.StatusText}}</strong>
+      <pre>Content-Type: {{.RespCType}}</pre>
+      <div class="body-label">返却された HTML 断片（主フラグメント）</div>
+      <pre class="body">{{.Body}}</pre>
+    </div>
+  </div>
+  {{else}}
+  <p class="empty">左ペインで操作すると、実際に飛んだリクエストとサーバーの生レスポンスがここに表示されます。</p>
+  {{end}}
+  <h2>交信履歴（直近10件）</h2>
+  <ol class="history">
+    {{range .History}}<li><span class="method">{{.Method}}</span> {{.Path}} <span class="status">{{.Status}}</span></li>
+    {{else}}<li class="empty">まだ交信はありません</li>{{end}}
+  </ol>
+</div>{{end}}
