@@ -56,13 +56,25 @@ PORT=9000 go run .     # ポート変更
 | メソッド | パス | 内容 |
 |---|---|---|
 | `GET` | `/` | 2 ペインのページ全体(初回に Cookie 発行) |
-| `GET` | `/fragments/todos` , `/fragments/users` | 左ペインのタブ中身 + インスペクター OOB |
-| `POST` | `/api/todos` , `/api/users` | 追加 → 新行 + インスペクター OOB |
-| `PATCH` | `/api/todos/{id}` | `title` あり=改名 / なし=完了トグル |
+| `GET` | `/fragments/todos` , `/fragments/users` | タブ中身 + インスペクター OOB。`?q=&filter=all\|active\|done` で検索・絞込 |
+| `GET` | `/theme/toggle` | テーマ切替(Cookie `ha_theme`)→ `HX-Redirect` でリロード |
+| `POST` | `/api/todos` , `/api/users` | 追加 → 新行 + OOB。重複タイトルは 409 |
+| `PUT` | `/api/todos/{id}` | **全置換**(title+done をまとめて・冪等) |
+| `PATCH` | `/api/todos/{id}` | **部分更新**(`title` あり=改名 / なし=完了トグル) |
 | `PATCH` | `/api/users/{id}` | 改名・メール更新 |
-| `DELETE` | `/api/todos/{id}` , `/api/users/{id}` | 削除(空断片)+ インスペクター OOB |
+| `DELETE` | `/api/todos/{id}` , `/api/users/{id}` | 削除(空断片)+ OOB |
 
-不正 id / 不在リソースは 404、必須値欠落は 422 を **HTML 断片**で返し、失敗した交信もインスペクターに表示する。
+不正 id / 不在リソースは 404、必須値欠落は 422、重複は 409 を **HTML 断片**で返す。
+htmx 既定は 4xx/5xx を swap しないため、`htmx-config` の `responseHandling` を上書きして
+エラー断片とインスペクター OOB がブラウザでも表示されるようにしている。
+
+## 学べる HTTP / HTMX 概念
+- **HTTP メソッド**: GET / POST / PUT(全置換・冪等) / PATCH(部分更新) / DELETE
+- **ステータス**: 201 / 200 / 404 / 409(重複) / 422(検証)、エラー応答の swap 設定
+- **レスポンスヘッダ**: `HX-Trigger`(トースト発火) / `HX-Redirect`(クライアントリダイレクト)をインスペクターで可視化
+- **HTMX パターン**: OOB swap、swap 戦略(beforeend / outerHTML / innerHTML)、
+  `hx-trigger`(`keyup changed delay:300ms`)、`hx-include`、`hx-confirm`、`hx-indicator`
+- **状態の置き場所**: Cookie + サーバレンダリング(テーマ・セッション)。クライアント側の状態管理は持たない
 
 ## OOB の仕組み(教材の核心)
 各 CRUD レスポンスは 2 部構成で返る。
