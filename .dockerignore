@@ -1,0 +1,7 @@
+.git
+.github
+.kiro
+README.md
+*_test.go
+/http-anatomy
+.DS_Store
