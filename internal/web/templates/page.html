@@ -3,7 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>http-anatomy — Webの裏側を解剖する</title>
+  <title>HTMX解剖室 — Webの裏側を解剖する</title>
+  <!-- 既定の htmx は 4xx/5xx を swap しない(エラー断片が画面に出ない)。
+       教材としてエラー応答も可視化するため、4xx/5xx も swap するよう上書きする。 -->
+  <meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"[45]..","swap":true,"error":true}]}'>
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
   <style>
     :root { --bg:#0f1419; --panel:#171c24; --line:#2a323d; --fg:#d6dde6; --muted:#7d8b9a; --accent:#4fd1c5; --req:#f6ad55; --res:#68d391; --err:#fc8181; }
