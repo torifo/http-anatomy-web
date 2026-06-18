@@ -192,6 +192,23 @@ func (s *Store) DeleteUser(id string, userID int) bool {
 	return false
 }
 
+// SeedIfEmpty populates a brand-new session with one example todo and one
+// example user, so first-time visitors land on a non-empty screen. No-op if
+// the session already holds any data. Done under one lock (does not call the
+// other Add* methods, which would re-lock).
+func (s *Store) SeedIfEmpty(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	sess := s.ensure(id)
+	if len(sess.Todos) > 0 || len(sess.Users) > 0 {
+		return
+	}
+	sess.todoSeq++
+	sess.Todos = append(sess.Todos, model.Todo{ID: sess.todoSeq, Title: "HTMX を解剖してみる"})
+	sess.userSeq++
+	sess.Users = append(sess.Users, model.User{ID: sess.userSeq, Name: "Ada Lovelace", Email: "ada@example.com"})
+}
+
 // AppendHistory prepends an exchange (newest first) and trims to maxHistory.
 func (s *Store) AppendHistory(id string, ex model.Exchange) {
 	s.mu.Lock()

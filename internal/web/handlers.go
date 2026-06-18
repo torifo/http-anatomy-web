@@ -36,7 +36,13 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	// A first-time visitor (no session cookie yet) gets one example each,
+	// so the screen is never empty on arrival.
+	_, hadSession := r.Cookie(sessionCookie)
 	sid := sessionID(w, r)
+	if hadSession != nil {
+		s.store.SeedIfEmpty(sid)
+	}
 	view := PageView{
 		Theme:     themeFrom(r),
 		Todos:     buildTodosView(s.store.Todos(sid), "", "all"),
