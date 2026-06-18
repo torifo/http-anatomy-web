@@ -107,23 +107,14 @@ htmx 既定は 4xx/5xx を swap しないため、`htmx-config` の `responseHan
 - `internal/web/` … ルーティング・Cookie・CRUD ハンドラ・テンプレート(`go:embed`)
 - `.kiro/specs/http-anatomy/` … SDD spec(requirements / design / tasks)
 
-## デプロイ(GHCR + 自前 VPS)
+## デプロイ
 バックエンド(常駐 Go サーバ + サーバ側状態保持)のため **GitHub Pages では公開できない**。
-イメージを GHCR に発行し、VPS で pull して常駐させる。VPS 既存の共有リバースプロキシ
-(`nginxproxy/nginx-proxy` + `acme-companion`、外部ネット `global-proxy-network`)に
-`VIRTUAL_HOST` で吊るすだけで自動ルーティング・自動 TLS される。
+`main` への push で GitHub Actions が Docker イメージをビルドし、リバースプロキシ配下の
+サーバへ配置する想定。DB なし・単一コンテナで、状態は in-memory(揮発)。
 
-1. **イメージ発行(自動)**: `main` への push で GitHub Actions が
-   `ghcr.io/torifo/http-anatomy-web:latest`(と short-sha タグ)を build & push。
-2. **VPS 配置**: 設置先(例 `/home/ubuntu/Web/http-anatomy`)に `docker-compose.prod.yml` と
-   `.env`(`.env.example` 参照: `APP_HOST` / `IMAGE_TAG`)を置く。
-3. **デプロイ**:
-   ```sh
-   docker compose -f docker-compose.prod.yml --env-file .env pull
-   docker compose -f docker-compose.prod.yml --env-file .env up -d
-   ```
+`docker build` でローカルでもコンテナ起動できる(`PORT` 環境変数を尊重)。
 
-DB なし・単一コンテナ。状態は in-memory(揮発)なので、コンテナ再起動でセッションは消える。
+> デプロイ先の固有情報(ドメイン・ホスト・設置手順)は公開リポジトリには含めない。
 
 ## 範囲外
 永続化(DB)/ 認証 / セッション失効(TTL)/ ユーザー間共有 / リアルタイム配信 / AI。
