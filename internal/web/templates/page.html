@@ -58,7 +58,7 @@
       color:var(--fg); display:flex; align-items:center; gap:10px;
     }
     .theme-toggle {
-      margin-left:auto; background:var(--panel-2); color:var(--muted); border:1px solid var(--line);
+      background:var(--panel-2); color:var(--muted); border:1px solid var(--line);
       padding:7px 12px; border-radius:7px; cursor:pointer; font:500 11px/1 var(--font-mono);
       letter-spacing:.08em; text-transform:uppercase; transition:.15s;
     }
@@ -174,6 +174,33 @@
     .toast::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--accent); }
     @keyframes toast-in { from { opacity:0; transform:translateX(12px); } to { opacity:1; transform:none; } }
 
+    /* Help button & modal (CSS-only, no client state) */
+    .header-actions { margin-left:auto; display:flex; align-items:center; gap:8px; }
+    .help-btn { width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; background:var(--panel-2); color:var(--muted); border:1px solid var(--line); border-radius:50%; cursor:pointer; font:600 14px/1 var(--font-mono); transition:.15s; user-select:none; }
+    .help-btn:hover { border-color:var(--accent-line); color:var(--accent); }
+    .help-btn:focus-visible { outline:2px solid var(--accent-line); outline-offset:2px; }
+    .modal-toggle { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+    .modal { display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; padding:20px; }
+    #help-toggle:checked ~ .modal { display:flex; }
+    .modal-backdrop { position:absolute; inset:0; background:rgba(3,7,12,.62); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); }
+    .modal-dialog { position:relative; width:100%; max-width:580px; max-height:86vh; overflow:auto; background:var(--panel); border:1px solid var(--line); border-radius:16px; box-shadow:0 24px 70px var(--shadow); animation:modal-in .22s ease-out; }
+    @keyframes modal-in { from { opacity:0; transform:translateY(12px) scale(.985); } to { opacity:1; transform:none; } }
+    .modal-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:20px 22px 14px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--panel); }
+    .modal-title { margin:4px 0 0; font:700 18px var(--font-ui); }
+    .modal-close { flex:none; width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line); border-radius:8px; cursor:pointer; color:var(--muted); font-size:20px; line-height:1; transition:.15s; }
+    .modal-close:hover { border-color:var(--err); color:var(--err); }
+    .modal-body { padding:18px 22px 24px; }
+    .modal-body p { margin:0 0 16px; }
+    .g-note { display:block; margin-top:8px; color:var(--muted); font-size:13px; }
+    .guide-steps { list-style:none; margin:0 0 18px; padding:0; display:flex; flex-direction:column; gap:10px; }
+    .guide-steps li { display:flex; align-items:flex-start; gap:11px; background:var(--panel-2); border:1px solid var(--line); border-radius:10px; padding:11px 13px; font-size:13.5px; line-height:1.55; }
+    .guide-steps li > span:last-child { flex:1; }
+    .guide-steps .method, .guide-steps .status, .legend .method, .legend .status { flex:none; margin-top:1px; }
+    .modal-body code { font:500 12px var(--font-mono); background:var(--bg); border:1px solid var(--line); border-radius:4px; padding:1px 5px; color:var(--accent); }
+    .legend { display:flex; flex-wrap:wrap; gap:18px; padding-top:14px; border-top:1px solid var(--line); }
+    .legend-group { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .g-label { font:600 10px/1 var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin-right:2px; }
+
     /* Page-load reveal */
     @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
     .pane.left { animation:rise .4s ease-out both; }
@@ -190,7 +217,10 @@
 <body class="theme-{{.Theme}}">
   <header>
     <h1><span class="dot" aria-hidden="true"></span>HTMX解剖室<span id="global-spinner" class="spinner htmx-indicator" aria-hidden="true"></span>
-      <button class="theme-toggle" hx-get="/theme/toggle" title="テーマ切替 (Cookie + HX-Redirect)">テーマ切替</button>
+      <span class="header-actions">
+        <label for="help-toggle" class="help-btn" title="使い方ガイド" role="button" tabindex="0">?</label>
+        <button class="theme-toggle" hx-get="/theme/toggle" title="テーマ切替 (Cookie + HX-Redirect)">テーマ切替</button>
+      </span>
     </h1>
     <p>Webの裏側を解剖する。HTMLだけで画面の複数箇所を完全同期するHATEOAS体感教材。</p>
   </header>
@@ -207,6 +237,46 @@
       <div class="kicker">02 — HTTP インスペクター</div>
       {{template "inspector" .Inspector}}
     </section>
+  </div>
+  <input type="checkbox" id="help-toggle" class="modal-toggle" aria-hidden="true">
+  <div class="modal">
+    <label for="help-toggle" class="modal-backdrop" aria-label="閉じる"></label>
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-label="使い方ガイド">
+      <div class="modal-head">
+        <div>
+          <div class="kicker">Quick start</div>
+          <h2 class="modal-title">使い方ガイド</h2>
+        </div>
+        <label for="help-toggle" class="modal-close" aria-label="閉じる">×</label>
+      </div>
+      <div class="modal-body">
+        <p>左ペインで操作すると、実際に飛んだ HTTP リクエストとサーバーの生レスポンスが
+        右ペインの<strong>インスペクター</strong>に表示されます。1 つのレスポンスで
+        左の行と右のインスペクターが<strong>同時に</strong>書き換わるのが HTMX の OOB swap です。
+        <span class="g-note">右ペインを見ながら、次の順に試してみてください。</span></p>
+
+        <ol class="guide-steps">
+          <li><span class="method m-POST">POST</span><span>タスクを<strong>追加</strong> → 新しい行が増え、インスペクターに <code>201 Created</code> と <code>HX-Trigger</code>（トースト）が出る。</span></li>
+          <li><span class="method m-PATCH">PATCH</span><span><strong>✓ で完了トグル</strong> → 1 フィールドだけの<strong>部分更新</strong>。</span></li>
+          <li><span class="method m-PUT">PUT</span><span>タスク名を<strong>編集して Enter</strong> → title+done をまとめて差し替える<strong>全置換</strong>（冪等）。</span></li>
+          <li><span class="method m-DELETE">DELETE</span><span><strong>削除</strong> → 確認ダイアログ（<code>hx-confirm</code>）の後、行が消える。</span></li>
+          <li><span class="status err">409</span><span><strong>同じ名前を再追加</strong> → 重複は <code>409 Conflict</code>。エラー応答も可視化される。</span></li>
+          <li><span class="method m-GET">GET</span><span>検索ボックスに<strong>入力</strong> → 300ms 後に絞り込み（<code>hx-trigger</code> + クエリ文字列）。All / Active / Done でフィルタ。</span></li>
+          <li><span class="status redir">↻</span><span>右上の<strong>テーマ切替</strong> → Cookie 保存 + <code>HX-Redirect</code> でリロード。</span></li>
+        </ol>
+
+        <div class="legend">
+          <div class="legend-group">
+            <div class="g-label">メソッド</div>
+            <span class="method m-GET">GET</span><span class="method m-POST">POST</span><span class="method m-PUT">PUT</span><span class="method m-PATCH">PATCH</span><span class="method m-DELETE">DELETE</span>
+          </div>
+          <div class="legend-group">
+            <div class="g-label">ステータス</div>
+            <span class="status ok">2xx</span><span class="status redir">3xx</span><span class="status err">4xx / 5xx</span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <div id="toasts" aria-live="polite"></div>
   <script>
