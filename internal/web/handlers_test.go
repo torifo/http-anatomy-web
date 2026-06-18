@@ -111,18 +111,18 @@ func TestToggleVsEditTodo(t *testing.T) {
 func TestNewVisitorGetsSeedExamples(t *testing.T) {
 	h := newTestServer()
 	w := do(t, h, "GET", "/", "", nil) // no cookie -> first-time visitor
-	if !strings.Contains(w.Body.String(), "HTMX を解剖してみる") {
+	if !strings.Contains(w.Body.String(), "例）HTMX を解剖してみる") {
 		t.Fatal("first visit should seed an example todo")
 	}
 	sid := sessionFrom(w)
 	wu := do(t, h, "GET", "/fragments/users", sid, nil)
-	if !strings.Contains(wu.Body.String(), "Ada Lovelace") {
+	if !strings.Contains(wu.Body.String(), "例）Ada Lovelace") {
 		t.Fatal("first visit should seed an example user")
 	}
 	// Returning visitor (cookie present) is not re-seeded after clearing.
 	do(t, h, "DELETE", "/api/todos/1", sid, nil)
 	w2 := do(t, h, "GET", "/", sid, nil)
-	if strings.Contains(w2.Body.String(), "HTMX を解剖してみる") {
+	if strings.Contains(w2.Body.String(), "例）HTMX を解剖してみる") {
 		t.Fatal("returning visitor should not be re-seeded")
 	}
 }

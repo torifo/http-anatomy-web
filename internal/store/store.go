@@ -204,9 +204,9 @@ func (s *Store) SeedIfEmpty(id string) {
 		return
 	}
 	sess.todoSeq++
-	sess.Todos = append(sess.Todos, model.Todo{ID: sess.todoSeq, Title: "HTMX を解剖してみる"})
+	sess.Todos = append(sess.Todos, model.Todo{ID: sess.todoSeq, Title: "例）HTMX を解剖してみる"})
 	sess.userSeq++
-	sess.Users = append(sess.Users, model.User{ID: sess.userSeq, Name: "Ada Lovelace", Email: "ada@example.com"})
+	sess.Users = append(sess.Users, model.User{ID: sess.userSeq, Name: "例）Ada Lovelace", Email: "ada@example.com"})
 }
 
 // AppendHistory prepends an exchange (newest first) and trims to maxHistory.
