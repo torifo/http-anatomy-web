@@ -23,9 +23,10 @@
 </div>{{end}}
 
 {{define "todo-item"}}<li id="todo-{{.ID}}" class="row{{if .Done}} done{{end}}">
-  <button title="完了トグル" hx-patch="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML">{{if .Done}}↩{{else}}✓{{end}}</button>
-  <form hx-patch="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML" style="flex:1; display:flex; gap:8px;">
-    <input class="edit" name="title" value="{{.Title}}" maxlength="200">
+  <button class="toggle-btn" title="完了トグル (PATCH)" hx-patch="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML">{{if .Done}}↩{{else}}✓{{end}}</button>
+  <form hx-put="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML">
+    <input class="edit" name="title" value="{{.Title}}" maxlength="200" aria-label="タスク名">
+    <input type="hidden" name="done" value="{{if .Done}}true{{else}}false{{end}}">
   </form>
   <button title="削除" hx-delete="/api/todos/{{.ID}}" hx-target="#todo-{{.ID}}" hx-swap="outerHTML" hx-confirm="このタスクを削除しますか？">削除</button>
 </li>{{end}}

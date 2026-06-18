@@ -1,27 +1,30 @@
 {{define "inspector"}}<div id="http-inspector"{{if .OOB}} hx-swap-oob="true"{{end}}>
-  <h2>HTTP インスペクター</h2>
   {{with .Current}}
+  <h2>最新の交信</h2>
   <div class="exchange">
     <div class="req">
-      <strong>&gt; {{.Method}} {{.Path}} {{.Proto}}</strong>
+      <div class="sec-label">Request</div>
+      <div class="reqline"><span class="method m-{{.Method}}">{{.Method}}</span> {{.Path}} <span class="proto">{{.Proto}}</span></div>
       <pre>{{range .ReqHeaders}}{{.Name}}: {{.Value}}
 {{end}}</pre>
     </div>
     <div class="res">
-      <strong>&lt; {{.Proto}} {{.Status}} {{.StatusText}}</strong>
+      <div class="sec-label">Response</div>
+      <div class="reqline"><span class="proto">{{.Proto}}</span> <span class="status {{if lt .Status 300}}ok{{else if lt .Status 400}}redir{{else}}err{{end}}">{{.Status}} {{.StatusText}}</span></div>
       <pre>Content-Type: {{.RespCType}}
 {{range .RespHeaders}}{{.Name}}: {{.Value}}
 {{end}}</pre>
-      <div class="body-label">返却された HTML 断片（主フラグメント）</div>
+      <div class="body-label">Response body — 返却 HTML 断片</div>
       <pre class="body">{{.Body}}</pre>
     </div>
   </div>
   {{else}}
+  <h2>最新の交信</h2>
   <p class="empty">左ペインで操作すると、実際に飛んだリクエストとサーバーの生レスポンスがここに表示されます。</p>
   {{end}}
   <h2>交信履歴（直近10件）</h2>
   <ol class="history">
-    {{range .History}}<li><span class="method">{{.Method}}</span> {{.Path}} <span class="status">{{.Status}}</span></li>
+    {{range .History}}<li><span class="method m-{{.Method}}">{{.Method}}</span> <span class="path">{{.Path}}</span> <span class="status {{if lt .Status 300}}ok{{else if lt .Status 400}}redir{{else}}err{{end}}">{{.Status}}</span></li>
     {{else}}<li class="empty">まだ交信はありません</li>{{end}}
   </ol>
 </div>{{end}}

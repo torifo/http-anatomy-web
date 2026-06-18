@@ -76,7 +76,7 @@ func TestCreateTodoReturnsPrimaryPlusOOB(t *testing.T) {
 	if !strings.Contains(body, `hx-swap-oob="true"`) {
 		t.Fatal("response missing OOB inspector")
 	}
-	if !strings.Contains(body, "POST /api/todos") {
+	if !strings.Contains(body, ">POST<") || !strings.Contains(body, "/api/todos") {
 		t.Fatal("inspector should show the request line")
 	}
 }
@@ -171,7 +171,7 @@ func TestPutTodoFullReplace(t *testing.T) {
 	if !strings.Contains(body, "new") || !strings.Contains(body, "done") {
 		t.Fatalf("PUT should replace title and set done: %s", body)
 	}
-	if !strings.Contains(body, "PUT /api/todos/1") {
+	if !strings.Contains(body, ">PUT<") || !strings.Contains(body, "/api/todos/1") {
 		t.Fatal("inspector should record the PUT")
 	}
 	w = do(t, h, "PUT", "/api/todos/999", "s", url.Values{"title": {"x"}})
@@ -191,7 +191,7 @@ func TestDeleteTodoEmptyPrimary(t *testing.T) {
 	if strings.Contains(body, `id="todo-1"`) {
 		t.Fatal("deleted row should not be in primary fragment")
 	}
-	if !strings.Contains(body, "DELETE /api/todos/1") {
+	if !strings.Contains(body, ">DELETE<") || !strings.Contains(body, "/api/todos/1") {
 		t.Fatal("inspector should record the delete")
 	}
 }

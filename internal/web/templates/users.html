@@ -11,9 +11,9 @@
 </div>{{end}}
 
 {{define "user-item"}}<li id="user-{{.ID}}" class="row">
-  <form hx-patch="/api/users/{{.ID}}" hx-target="#user-{{.ID}}" hx-swap="outerHTML" style="flex:1; display:flex; gap:8px;">
-    <input class="edit" name="name" value="{{.Name}}" maxlength="200">
-    <input class="edit" name="email" value="{{.Email}}" maxlength="200">
+  <form hx-patch="/api/users/{{.ID}}" hx-target="#user-{{.ID}}" hx-swap="outerHTML">
+    <input class="edit" name="name" value="{{.Name}}" maxlength="200" aria-label="名前">
+    <input class="edit" name="email" value="{{.Email}}" maxlength="200" aria-label="メール">
   </form>
   <button title="削除" hx-delete="/api/users/{{.ID}}" hx-target="#user-{{.ID}}" hx-swap="outerHTML" hx-confirm="このユーザーを削除しますか？">削除</button>
 </li>{{end}}
