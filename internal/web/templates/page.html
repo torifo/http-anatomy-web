@@ -7,72 +7,196 @@
   <!-- 既定の htmx は 4xx/5xx を swap しない(エラー断片が画面に出ない)。
        教材としてエラー応答も可視化するため、4xx/5xx も swap するよう上書きする。 -->
   <meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"[45]..","swap":true,"error":true}]}'>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
   <style>
-    .theme-dark { --bg:#0f1419; --panel:#171c24; --line:#2a323d; --fg:#d6dde6; --muted:#7d8b9a; --accent:#4fd1c5; --req:#f6ad55; --res:#68d391; --err:#fc8181; }
-    .theme-light { --bg:#f7f8fa; --panel:#ffffff; --line:#d9dee5; --fg:#1b2430; --muted:#5a6b7b; --accent:#0d9488; --req:#b45309; --res:#15803d; --err:#b91c1c; }
+    .theme-dark {
+      --bg:#0a0e13; --bg-2:#0d1219; --panel:#121a23; --panel-2:#16202b;
+      --line:#212c38; --line-2:#2b3947; --fg:#e6edf4; --muted:#8090a0; --faint:#5d6b7b;
+      --accent:#3ae0c6; --accent-soft:rgba(58,224,198,.14); --accent-line:rgba(58,224,198,.35);
+      --req:#f2a85a; --res:#5cd08c; --err:#f47174; --redir:#f2c94c;
+      --grid:rgba(255,255,255,.022); --glow:rgba(58,224,198,.07); --shadow:rgba(0,0,0,.45);
+    }
+    .theme-light {
+      --bg:#eceff3; --bg-2:#f4f6f9; --panel:#ffffff; --panel-2:#f7f9fb;
+      --line:#dde3ea; --line-2:#cdd6df; --fg:#16202b; --muted:#586675; --faint:#8c98a5;
+      --accent:#0d9488; --accent-soft:rgba(13,148,136,.10); --accent-line:rgba(13,148,136,.35);
+      --req:#b45309; --res:#15803d; --err:#dc2626; --redir:#b7791f;
+      --grid:rgba(0,0,0,.028); --glow:rgba(13,148,136,.06); --shadow:rgba(15,30,50,.12);
+    }
+    :root { --font-ui:'IBM Plex Sans',ui-sans-serif,system-ui,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace; }
     * { box-sizing:border-box; }
-    body { margin:0; font:14px/1.5 ui-sans-serif,system-ui,sans-serif; background:var(--bg); color:var(--fg); }
-    header { padding:14px 20px; border-bottom:1px solid var(--line); }
-    header h1 { margin:0; font-size:16px; display:flex; align-items:center; }
-    .theme-toggle { margin-left:auto; background:var(--panel); color:var(--fg); border:1px solid var(--line); padding:5px 10px; border-radius:6px; cursor:pointer; font-size:12px; }
-    .theme-toggle:hover { border-color:var(--accent); }
-    header p { margin:4px 0 0; color:var(--muted); font-size:12px; }
-    .panes { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); min-height:calc(100vh - 64px); }
-    .pane { background:var(--bg); padding:18px; overflow:auto; }
-    .pane h2 { margin:0 0 12px; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
-    .tabs { display:flex; gap:8px; margin-bottom:14px; }
-    .tabs button { background:var(--panel); color:var(--fg); border:1px solid var(--line); padding:6px 14px; border-radius:6px; cursor:pointer; }
-    .tabs button:hover { border-color:var(--accent); }
-    form.add { display:flex; gap:8px; margin-bottom:14px; }
-    input { background:var(--panel); border:1px solid var(--line); color:var(--fg); padding:7px 10px; border-radius:6px; }
-    input:focus { outline:none; border-color:var(--accent); }
+    html { -webkit-text-size-adjust:100%; }
+    body {
+      margin:0; min-height:100vh; display:flex; flex-direction:column;
+      font:400 14px/1.55 var(--font-ui); letter-spacing:.005em;
+      background:var(--bg); color:var(--fg); -webkit-font-smoothing:antialiased;
+    }
+    body::before {
+      content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(1100px 460px at 78% -8%, var(--glow), transparent 70%),
+        linear-gradient(var(--grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+      background-size:100% 100%, 34px 34px, 34px 34px;
+    }
+    header, .panes, #toasts { position:relative; z-index:1; }
+
+    /* Header — instrument label bar */
+    header {
+      padding:16px 22px 15px; border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, var(--bg-2), transparent);
+      -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); position:sticky; top:0;
+    }
+    .brand { display:flex; align-items:center; gap:10px; }
+    .dot { width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 0 var(--accent-soft); animation:pulse 2.4s ease-out infinite; }
+    @keyframes pulse { 0%{box-shadow:0 0 0 0 var(--accent-soft);} 70%{box-shadow:0 0 0 7px transparent;} 100%{box-shadow:0 0 0 0 transparent;} }
+    header h1 {
+      margin:0; font:600 13px/1 var(--font-mono); letter-spacing:.22em; text-transform:uppercase;
+      color:var(--fg); display:flex; align-items:center; gap:10px;
+    }
+    .theme-toggle {
+      margin-left:auto; background:var(--panel-2); color:var(--muted); border:1px solid var(--line);
+      padding:7px 12px; border-radius:7px; cursor:pointer; font:500 11px/1 var(--font-mono);
+      letter-spacing:.08em; text-transform:uppercase; transition:.15s;
+    }
+    .theme-toggle:hover { border-color:var(--accent-line); color:var(--fg); }
+    header p { margin:9px 0 0; color:var(--muted); font-size:12.5px; max-width:62ch; }
+
+    /* Panes */
+    .panes { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); flex:1; }
+    .pane { background:var(--bg); padding:22px 22px 28px; overflow:auto; }
+    .pane.right { background:var(--bg-2); }
+    .kicker { font:500 10.5px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:var(--faint); margin-bottom:14px; }
+    .pane h2 { margin:0 0 14px; font:600 12px/1 var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+
+    /* Tabs — segmented control */
+    .tabs { display:inline-flex; padding:3px; gap:2px; margin-bottom:18px; background:var(--panel); border:1px solid var(--line); border-radius:9px; }
+    .tabs button {
+      background:transparent; color:var(--muted); border:0; padding:7px 16px; border-radius:6px;
+      cursor:pointer; font:500 12.5px var(--font-ui); transition:.15s;
+    }
+    .tabs button:hover { color:var(--fg); }
+    .tabs button:focus-visible { outline:2px solid var(--accent-line); outline-offset:1px; }
+
+    /* Inputs & buttons */
+    input {
+      background:var(--panel-2); border:1px solid var(--line); color:var(--fg);
+      padding:0 12px; height:38px; border-radius:8px; font:400 13.5px var(--font-ui); transition:.15s;
+    }
+    input::placeholder { color:var(--faint); }
+    input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
     button { font:inherit; }
-    .add button, .row button { background:var(--panel); color:var(--fg); border:1px solid var(--line); padding:6px 10px; border-radius:6px; cursor:pointer; }
-    .add button:hover, .row button:hover { border-color:var(--accent); }
-    ul.list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
-    li.row { display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 10px; }
-    li.row.done span.title { text-decoration:line-through; color:var(--muted); }
+    .btn, .add button, .row button, .filter {
+      display:inline-flex; align-items:center; justify-content:center; gap:6px;
+      background:var(--panel); color:var(--fg); border:1px solid var(--line);
+      height:38px; padding:0 14px; border-radius:8px; cursor:pointer; font:500 12.5px var(--font-ui); transition:.15s;
+    }
+    .row button { height:32px; padding:0 11px; }
+    .add button { background:var(--accent); color:#04120f; border-color:transparent; font-weight:600; }
+    .theme-light .add button { color:#fff; }
+    .add button:hover { filter:brightness(1.08); }
+    .row button:hover, .filter:hover { border-color:var(--accent-line); }
+    button:focus-visible, .filter:focus-visible { outline:2px solid var(--accent-line); outline-offset:1px; }
+
+    form.add { display:flex; gap:8px; margin-bottom:18px; }
+    form.add input { flex:1; }
+
+    /* List rows — cards */
+    ul.list { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px; }
+    li.row {
+      display:flex; align-items:center; gap:9px; background:var(--panel); border:1px solid var(--line);
+      border-radius:10px; padding:9px 11px; transition:border-color .15s, transform .15s, box-shadow .15s;
+    }
+    li.row:hover { border-color:var(--line-2); box-shadow:0 4px 14px var(--shadow); }
+    li.row.done { opacity:.72; }
+    li.row.done input.edit { text-decoration:line-through; color:var(--muted); }
     li.row .title { flex:1; }
-    li.row input.edit { flex:1; }
-    .inspector .exchange { border:1px solid var(--line); border-radius:8px; margin-bottom:16px; overflow:hidden; }
-    .inspector .req, .inspector .res { padding:10px 12px; }
-    .inspector .req { background:#1b1e1a; border-bottom:1px solid var(--line); }
-    .inspector .req strong { color:var(--req); }
-    .inspector .res strong { color:var(--res); }
-    .inspector pre { margin:6px 0 0; white-space:pre-wrap; word-break:break-word; font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--fg); }
-    .inspector .body-label { margin-top:10px; font-size:11px; color:var(--muted); }
-    .inspector pre.body { background:#0b0e12; border:1px solid var(--line); border-radius:6px; padding:8px; color:var(--accent); }
-    .inspector .empty { color:var(--muted); }
-    .inspector ol.history { margin:8px 0 0; padding-left:18px; color:var(--muted); font:12px/1.7 ui-monospace,monospace; }
-    .inspector .method { color:var(--req); }
-    .inspector .status { color:var(--res); }
-    .error { background:#2a1b1b; border:1px solid var(--err); color:var(--err); border-radius:8px; padding:8px 10px; }
-    .spinner { display:inline-block; width:14px; height:14px; border:2px solid var(--line); border-top-color:var(--accent); border-radius:50%; vertical-align:middle; margin-left:8px; animation:spin .6s linear infinite; }
+    li.row input.edit { flex:1; height:32px; background:transparent; border-color:transparent; padding:0 8px; }
+    li.row input.edit:hover { border-color:var(--line); }
+    li.row input.edit:focus { background:var(--panel-2); border-color:var(--accent); }
+    li.row form { flex:1; display:flex; gap:6px; }
+    .toggle-btn { color:var(--accent); }
+
+    /* Toolbar / filters / summary */
+    .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+    .toolbar input[name=q] { flex:1; min-width:140px; }
+    .filters { display:inline-flex; padding:3px; gap:2px; background:var(--panel); border:1px solid var(--line); border-radius:9px; }
+    .filters .filter { height:30px; padding:0 12px; background:transparent; border:0; color:var(--muted); border-radius:6px; }
+    .filters .filter:hover { color:var(--fg); }
+    .filter.active { color:var(--accent); background:var(--accent-soft); }
+    .summary { color:var(--muted); font:400 12px var(--font-mono); letter-spacing:.02em; margin-bottom:12px; list-style:none; }
+
+    /* Inspector */
+    .inspector .exchange { border:1px solid var(--line); border-radius:11px; margin-bottom:18px; overflow:hidden; background:var(--panel); box-shadow:0 6px 20px var(--shadow); }
+    .inspector .sec-label { font:600 10px/1 var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:var(--faint); margin-bottom:6px; }
+    .inspector .req, .inspector .res { padding:13px 15px; }
+    .inspector .req { border-left:3px solid var(--req); background:linear-gradient(90deg, color-mix(in srgb, var(--req) 7%, transparent), transparent 40%); border-bottom:1px solid var(--line); }
+    .inspector .res { border-left:3px solid var(--res); background:linear-gradient(90deg, color-mix(in srgb, var(--res) 7%, transparent), transparent 40%); }
+    .inspector .reqline { font:600 13px/1.4 var(--font-mono); color:var(--fg); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .inspector pre { margin:8px 0 0; white-space:pre-wrap; word-break:break-word; font:400 12px/1.65 var(--font-mono); color:var(--muted); }
+    .inspector .body-label { margin-top:12px; font:600 10px/1 var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:var(--faint); }
+    .inspector pre.body { background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:11px; color:var(--accent); margin-top:7px; max-height:280px; overflow:auto; }
+    .inspector .empty { color:var(--muted); font-size:13px; padding:14px; border:1px dashed var(--line); border-radius:10px; }
+    .inspector ol.history { margin:8px 0 0; padding:0; list-style:none; display:flex; flex-direction:column; gap:5px; }
+    .inspector ol.history li { display:flex; align-items:center; gap:9px; font:400 12px var(--font-mono); color:var(--muted); padding:6px 9px; border:1px solid var(--line); border-radius:7px; background:var(--panel); }
+    .inspector ol.history li.empty { border-style:dashed; }
+
+    /* Method badges & status pills */
+    .method { font:600 10.5px/1 var(--font-mono); letter-spacing:.06em; padding:4px 7px; border-radius:5px; color:#fff; background:var(--muted); }
+    .m-GET{background:#3b82f6;} .m-POST{background:#22a06b;} .m-PUT{background:#d97706;}
+    .m-PATCH{background:#8b5cf6;} .m-DELETE{background:#dc2626;}
+    .status { font:600 11px/1 var(--font-mono); padding:4px 8px; border-radius:5px; }
+    .status.ok { color:var(--res); background:color-mix(in srgb,var(--res) 16%, transparent); }
+    .status.redir { color:var(--redir); background:color-mix(in srgb,var(--redir) 16%, transparent); }
+    .status.err { color:var(--err); background:color-mix(in srgb,var(--err) 16%, transparent); }
+    .history .path { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    .error { background:color-mix(in srgb,var(--err) 12%, var(--panel)); border:1px solid var(--err); color:var(--err); border-radius:10px; padding:10px 12px; font:500 13px var(--font-ui); }
+
+    /* Spinner & indicators */
+    .spinner { display:inline-block; width:13px; height:13px; border:2px solid var(--line-2); border-top-color:var(--accent); border-radius:50%; vertical-align:middle; animation:spin .6s linear infinite; }
     @keyframes spin { to { transform:rotate(360deg); } }
     .htmx-indicator { opacity:0; transition:opacity 150ms; }
     .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity:1; }
-    .toolbar { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:8px; }
-    .toolbar input[name=q] { flex:1; min-width:120px; }
-    .filters { display:flex; gap:4px; }
-    .filter { background:var(--panel); color:var(--muted); border:1px solid var(--line); padding:5px 10px; border-radius:6px; cursor:pointer; }
-    .filter:hover { border-color:var(--accent); }
-    .filter.active { color:var(--accent); border-color:var(--accent); }
-    .summary { color:var(--muted); font-size:12px; margin-bottom:8px; list-style:none; }
-    #toasts { position:fixed; right:16px; bottom:16px; display:flex; flex-direction:column; gap:8px; z-index:50; }
-    .toast { background:var(--panel); border:1px solid var(--accent); color:var(--fg); padding:10px 14px; border-radius:8px; box-shadow:0 4px 16px rgba(0,0,0,.4); animation:toast-in .2s ease-out; }
-    @keyframes toast-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+    /* Swap settle animations */
+    @keyframes settle { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+    .htmx-added { animation:settle .26s ease-out; }
+    @keyframes flash { 0%{box-shadow:0 0 0 1px var(--accent) inset;} 100%{box-shadow:0 0 0 1px transparent inset;} }
+    #http-inspector.htmx-added .exchange { animation:flash .6s ease-out; }
+
+    /* Toasts */
+    #toasts { position:fixed; right:18px; bottom:18px; display:flex; flex-direction:column; gap:9px; z-index:50; }
+    .toast { display:flex; align-items:center; gap:9px; background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--accent); color:var(--fg); padding:11px 15px; border-radius:9px; box-shadow:0 8px 28px var(--shadow); font:500 13px var(--font-ui); animation:toast-in .22s ease-out; }
+    .toast::before { content:""; width:7px; height:7px; border-radius:50%; background:var(--accent); }
+    @keyframes toast-in { from { opacity:0; transform:translateX(12px); } to { opacity:1; transform:none; } }
+
+    /* Page-load reveal */
+    @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+    .pane.left { animation:rise .4s ease-out both; }
+    .pane.right { animation:rise .4s .08s ease-out both; }
+
+    /* Scrollbars */
+    .pane::-webkit-scrollbar, pre::-webkit-scrollbar { width:10px; height:10px; }
+    .pane::-webkit-scrollbar-thumb, pre::-webkit-scrollbar-thumb { background:var(--line-2); border-radius:6px; border:2px solid var(--bg); }
+
+    @media (max-width:760px) { .panes { grid-template-columns:1fr; } header p { display:none; } }
+    @media (prefers-reduced-motion:reduce) { *,*::before { animation:none !important; } }
   </style>
 </head>
 <body class="theme-{{.Theme}}">
   <header>
-    <h1>HTMX解剖室<span id="global-spinner" class="spinner htmx-indicator" aria-hidden="true"></span>
-      <button class="theme-toggle" hx-get="/theme/toggle" title="テーマ切替 (Cookie + HX-Redirect)">🌓 テーマ</button>
+    <h1><span class="dot" aria-hidden="true"></span>HTMX解剖室<span id="global-spinner" class="spinner htmx-indicator" aria-hidden="true"></span>
+      <button class="theme-toggle" hx-get="/theme/toggle" title="テーマ切替 (Cookie + HX-Redirect)">テーマ切替</button>
     </h1>
     <p>Webの裏側を解剖する。HTMLだけで画面の複数箇所を完全同期するHATEOAS体感教材。</p>
   </header>
   <div class="panes" hx-indicator="#global-spinner">
     <section class="pane left">
+      <div class="kicker">01 — リソース操作</div>
       <div class="tabs">
         <button hx-get="/fragments/todos" hx-target="#resource-pane" hx-swap="outerHTML">Todos</button>
         <button hx-get="/fragments/users" hx-target="#resource-pane" hx-swap="outerHTML">Users</button>
@@ -80,6 +204,7 @@
       {{template "todos" .Todos}}
     </section>
     <section class="pane right inspector">
+      <div class="kicker">02 — HTTP インスペクター</div>
       {{template "inspector" .Inspector}}
     </section>
   </div>
